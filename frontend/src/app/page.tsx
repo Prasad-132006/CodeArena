@@ -37,8 +37,8 @@ export default function Home() {
     {
       phase: 'Phase 2',
       title: 'Authentication & Problem Library',
-      status: 'Next Up',
-      active: false,
+      status: 'Completed Milestone',
+      active: true,
       items: [
         'JWT Auth, User sessions, registration/login',
         'Problem schema, test cases, difficulty & tags',

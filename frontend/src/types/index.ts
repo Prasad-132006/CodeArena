@@ -56,6 +56,15 @@ export interface ProblemItem {
   created_at: string;
 }
 
+export interface TestCase {
+  id: string;
+  input_data: string;
+  expected_output: string;
+  is_sample: boolean;
+  explanation?: string | null;
+  order: number;
+}
+
 export interface ProblemDetail {
   id: string;
   slug: string;
@@ -68,6 +77,7 @@ export interface ProblemDetail {
   starter_code: string;
   examples: ProblemExample[];
   tags: Tag[];
+  test_cases?: TestCase[];
   is_published: boolean;
   created_at: string;
   updated_at: string;
