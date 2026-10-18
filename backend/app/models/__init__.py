@@ -1,6 +1,6 @@
 from app.models.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
 from app.models.user import User
-from app.models.problem import Problem, Tag, problem_tags
+from app.models.problem import Problem, Tag, TestCase, problem_tags
 
 __all__ = [
     "Base",
@@ -9,5 +9,7 @@ __all__ = [
     "User",
     "Problem",
     "Tag",
+    "TestCase",
     "problem_tags",
 ]
+

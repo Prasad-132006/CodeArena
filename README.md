@@ -200,10 +200,10 @@ npm run build
 
 ## 6. Phased Implementation Roadmap
 
-- [x] **Phase 1: Foundation & Monorepo** *(Current)*
+- [x] **Phase 1: Foundation & Monorepo**
   - Monorepo structure, Next.js, FastAPI, PostgreSQL, Redis, Docker Compose, Health endpoint, design tokens.
-- [ ] **Phase 2: Authentication & Problem Library**
-  - JWT auth, user sessions, problem schema, tags, test cases, problem browsing UI.
+- [x] **Phase 2: Authentication & Problem Library**
+  - JWT auth (Argon2id + HttpOnly cookie/Bearer), user management & profiles, problem schema, tags, evaluation test cases (sample & hidden), Monaco Editor workspace, problem browsing UI.
 - [ ] **Phase 3: Docker C++ Judge Engine & Worker**
   - Redis RQ job worker, isolated container runner, async verdict processing, submission history.
 - [ ] **Phase 4: Deterministic Diagnostics & AI Coding Coach**

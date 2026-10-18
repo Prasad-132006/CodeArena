@@ -33,6 +33,18 @@ class ProblemListItem(BaseModel):
     created_at: datetime
 
 
+class TestCaseResponse(BaseModel):
+    """Execution test case schema."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    input_data: str
+    expected_output: str
+    is_sample: bool
+    explanation: Optional[str] = None
+    order: int
+
+
 class ProblemDetailResponse(BaseModel):
     """Comprehensive problem schema for problem details."""
     model_config = ConfigDict(from_attributes=True)
@@ -48,6 +60,7 @@ class ProblemDetailResponse(BaseModel):
     starter_code: str
     examples: List[Any] = Field(default_factory=list)
     tags: List[TagResponse]
+    test_cases: List[TestCaseResponse] = Field(default_factory=list)
     is_published: bool
     created_at: datetime
     updated_at: datetime

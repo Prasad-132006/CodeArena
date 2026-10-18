@@ -166,3 +166,80 @@ async def test_logout(client):
     response = await client.post("/api/v1/auth/logout")
     assert response.status_code == 200
     assert "Successfully logged out" in response.json()["message"]
+
+
+@pytest.mark.asyncio
+async def test_update_me_display_name(client):
+    unique_email = f"update_{uuid.uuid4().hex[:8]}@example.com"
+    reg = await client.post(
+        "/api/v1/auth/register",
+        json={"email": unique_email, "display_name": "Old Name", "password": "Password123!"},
+    )
+    token = reg.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    update_res = await client.patch(
+        "/api/v1/auth/me",
+        json={"display_name": "New Display Name"},
+        headers=headers,
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["display_name"] == "New Display Name"
+
+    # Verify updated profile via get_me
+    me_res = await client.get("/api/v1/auth/me", headers=headers)
+    assert me_res.status_code == 200
+    assert me_res.json()["display_name"] == "New Display Name"
+
+
+@pytest.mark.asyncio
+async def test_change_password_success(client):
+    unique_email = f"pwd_{uuid.uuid4().hex[:8]}@example.com"
+    reg = await client.post(
+        "/api/v1/auth/register",
+        json={"email": unique_email, "display_name": "Pwd User", "password": "OriginalPassword123!"},
+    )
+    token = reg.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    change_res = await client.post(
+        "/api/v1/auth/me/change-password",
+        json={"current_password": "OriginalPassword123!", "new_password": "BrandNewPassword456!"},
+        headers=headers,
+    )
+    assert change_res.status_code == 200
+    assert "successfully" in change_res.json()["message"]
+
+    # Verify login with new password
+    login_new = await client.post(
+        "/api/v1/auth/login",
+        json={"email": unique_email, "password": "BrandNewPassword456!"},
+    )
+    assert login_new.status_code == 200
+
+    # Old password should now fail
+    login_old = await client.post(
+        "/api/v1/auth/login",
+        json={"email": unique_email, "password": "OriginalPassword123!"},
+    )
+    assert login_old.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_change_password_wrong_current(client):
+    unique_email = f"wrong_pwd_{uuid.uuid4().hex[:8]}@example.com"
+    reg = await client.post(
+        "/api/v1/auth/register",
+        json={"email": unique_email, "display_name": "Wrong Pwd User", "password": "OriginalPassword123!"},
+    )
+    token = reg.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    change_res = await client.post(
+        "/api/v1/auth/me/change-password",
+        json={"current_password": "IncorrectPassword999!", "new_password": "BrandNewPassword456!"},
+        headers=headers,
+    )
+    assert change_res.status_code == 400
+    assert "verification failed" in change_res.json()["detail"]
+

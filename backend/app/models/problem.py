@@ -6,6 +6,7 @@ from sqlalchemy import (
     String,
     Text,
     Boolean,
+    Integer,
     Table,
     Index,
     JSON,
@@ -49,6 +50,25 @@ class Tag(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
 
+class TestCase(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Evaluation test case for problem execution (sample and hidden)."""
+    __tablename__ = "test_cases"
+
+    problem_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("problems.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    input_data: Mapped[str] = mapped_column(Text, nullable=False)
+    expected_output: Mapped[str] = mapped_column(Text, nullable=False)
+    is_sample: Mapped[bool] = mapped_column(Boolean, default=False, index=True, nullable=False)
+    explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    problem: Mapped["Problem"] = relationship("Problem", back_populates="test_cases")
+
+
 class Problem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     """Coding Problem database model."""
     __tablename__ = "problems"
@@ -71,8 +91,17 @@ class Problem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         back_populates="problems",
         lazy="selectin",
     )
+    test_cases: Mapped[List[TestCase]] = relationship(
+        "TestCase",
+        back_populates="problem",
+        cascade="all, delete-orphan",
+        order_by="TestCase.order",
+        lazy="selectin",
+    )
 
 
 # Additional compound index for efficient filtering
 Index("ix_problems_published_difficulty", Problem.is_published, Problem.difficulty)
 Index("ix_problems_published_created", Problem.is_published, Problem.created_at.desc())
+Index("ix_test_cases_problem_sample", TestCase.problem_id, TestCase.is_sample)
+

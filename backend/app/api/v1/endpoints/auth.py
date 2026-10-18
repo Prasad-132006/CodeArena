@@ -8,7 +8,14 @@ from app.core.database import get_db
 from app.core.rate_limit import check_auth_rate_limit
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.models.user import User
-from app.schemas.user import TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
+from app.schemas.user import (
+    TokenResponse,
+    UserLoginRequest,
+    UserPasswordChangeRequest,
+    UserRegisterRequest,
+    UserResponse,
+    UserUpdateRequest,
+)
 
 router = APIRouter()
 
@@ -145,3 +152,41 @@ async def logout(response: Response):
 async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
     """Return verified profile of currently authenticated user."""
     return UserResponse.model_validate(current_user)
+
+
+@router.patch(
+    "/me",
+    response_model=UserResponse,
+    summary="Update authenticated user profile",
+)
+async def update_me(
+    payload: UserUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Update profile information such as display name."""
+    current_user.display_name = payload.display_name
+    await db.commit()
+    await db.refresh(current_user)
+    return UserResponse.model_validate(current_user)
+
+
+@router.post(
+    "/me/change-password",
+    summary="Change password for authenticated user",
+)
+async def change_password(
+    payload: UserPasswordChangeRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify existing password and set a new Argon2id hashed password."""
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password verification failed.",
+        )
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    await db.commit()
+    return {"message": "Password changed successfully."}
+

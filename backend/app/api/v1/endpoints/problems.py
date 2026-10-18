@@ -6,8 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
-from app.models.problem import Problem, Tag, problem_tags
-from app.schemas.problem import ProblemDetailResponse, ProblemListItem, ProblemListResponse, TagResponse
+from app.models.problem import Problem, Tag, TestCase, problem_tags
+from app.schemas.problem import (
+    ProblemDetailResponse,
+    ProblemListItem,
+    ProblemListResponse,
+    TagResponse,
+    TestCaseResponse,
+)
 
 router = APIRouter()
 
@@ -142,7 +148,7 @@ async def get_problem_by_slug(
     """Retrieve published problem details by unique slug."""
     stmt = (
         select(Problem)
-        .options(selectinload(Problem.tags))
+        .options(selectinload(Problem.tags), selectinload(Problem.test_cases))
         .where(Problem.slug == slug.lower().strip())
         .where(Problem.is_published.is_(True))
     )
@@ -156,3 +162,38 @@ async def get_problem_by_slug(
         )
 
     return ProblemDetailResponse.model_validate(problem)
+
+
+@router.get(
+    "/{slug}/test-cases",
+    response_model=List[TestCaseResponse],
+    summary="Retrieve problem test cases",
+)
+async def get_problem_test_cases(
+    slug: str,
+    samples_only: bool = Query(True, description="Filter for sample test cases visible to users"),
+    db: AsyncSession = Depends(get_db),
+) -> List[TestCaseResponse]:
+    """Retrieve test cases for a problem, defaulting to sample cases."""
+    stmt = (
+        select(Problem)
+        .where(Problem.slug == slug.lower().strip())
+        .where(Problem.is_published.is_(True))
+    )
+    result = await db.execute(stmt)
+    problem = result.scalar_one_or_none()
+    if not problem:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Problem '{slug}' not found or is currently unpublished.",
+        )
+
+    tc_stmt = select(TestCase).where(TestCase.problem_id == problem.id)
+    if samples_only:
+        tc_stmt = tc_stmt.where(TestCase.is_sample.is_(True))
+    tc_stmt = tc_stmt.order_by(TestCase.order.asc())
+
+    tc_res = await db.execute(tc_stmt)
+    test_cases = tc_res.scalars().all()
+    return [TestCaseResponse.model_validate(tc) for tc in test_cases]
+

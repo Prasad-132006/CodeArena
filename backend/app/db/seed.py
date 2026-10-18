@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session_maker
-from app.models.problem import Problem, Tag
+from app.models.problem import Problem, Tag, TestCase
 
 SEED_PROBLEMS: List[Dict[str, Any]] = [
     {
@@ -447,6 +447,50 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
 ]
 
 
+HIDDEN_TEST_CASES: Dict[str, List[Dict[str, str]]] = {
+    "two-sum": [
+        {"input": "nums = [1,5,8,10,14,20], target = 22", "output": "[2,4]"},
+        {"input": "nums = [-3,4,3,90], target = 0", "output": "[0,2]"},
+    ],
+    "reverse-a-string": [
+        {"input": 's = ["A"]', "output": '["A"]'},
+        {"input": 's = ["C","o","d","e","A","r","e","n","a"]', "output": '["a","n","e","r","A","e","d","o","C"]'},
+    ],
+    "valid-palindrome": [
+        {"input": 's = "0P"', "output": "false"},
+        {"input": 's = "ab_a"', "output": "true"},
+    ],
+    "binary-search": [
+        {"input": "nums = [2,5], target = 5", "output": "1"},
+        {"input": "nums = [-1,0,3,5,9,12], target = 13", "output": "-1"},
+    ],
+    "maximum-subarray": [
+        {"input": "nums = [-1]", "output": "-1"},
+        {"input": "nums = [-2,-1]", "output": "-1"},
+    ],
+    "valid-parentheses": [
+        {"input": 's = "(([]){})"', "output": "true"},
+        {"input": 's = "[(])"', "output": "false"},
+    ],
+    "merge-two-sorted-arrays": [
+        {"input": "nums1 = [2,0], m = 1, nums2 = [1], n = 1", "output": "[1,2]"},
+        {"input": "nums1 = [4,5,6,0,0,0], m = 3, nums2 = [1,2,3], n = 3", "output": "[1,2,3,4,5,6]"},
+    ],
+    "first-unique-character": [
+        {"input": 's = "aabb"', "output": "-1"},
+        {"input": 's = "codearena"', "output": "1"},
+    ],
+    "contains-duplicate": [
+        {"input": "nums = [1,1,1,3,3,4,3,2,4,2]", "output": "true"},
+        {"input": "nums = [1,2,3,4,5,6,7,8,9,10]", "output": "false"},
+    ],
+    "best-time-to-buy-and-sell-stock": [
+        {"input": "prices = [2,4,1]", "output": "2"},
+        {"input": "prices = [3,2,6,5,0,3]", "output": "4"},
+    ],
+}
+
+
 def slugify(text: str) -> str:
     """Normalize text into a URL slug."""
     text = text.lower().strip()
@@ -455,7 +499,7 @@ def slugify(text: str) -> str:
 
 async def seed_problems(session: AsyncSession) -> int:
     """
-    Idempotent database seeder for initial coding problems.
+    Idempotent database seeder for initial coding problems and test cases.
     Does not duplicate existing records.
     """
     # 1. Collect all tags
@@ -503,6 +547,7 @@ async def seed_problems(session: AsyncSession) -> int:
             )
             session.add(problem)
             seeded_count += 1
+            target_problem = problem
         else:
             # Update fields in-place idempotently
             existing_problem.title = p_data["title"]
@@ -515,6 +560,42 @@ async def seed_problems(session: AsyncSession) -> int:
             existing_problem.starter_code = p_data["starter_code"]
             existing_problem.is_published = p_data["is_published"]
             existing_problem.tags = tag_objs
+            target_problem = existing_problem
+
+        await session.flush()
+
+        # Seed sample and hidden test cases for judge execution
+        tc_check = await session.execute(
+            select(TestCase).where(TestCase.problem_id == target_problem.id)
+        )
+        existing_tc_list = tc_check.scalars().all()
+        if not existing_tc_list:
+            order = 0
+            for ex in p_data.get("examples", []):
+                session.add(
+                    TestCase(
+                        problem_id=target_problem.id,
+                        input_data=ex["input"],
+                        expected_output=ex["output"],
+                        is_sample=True,
+                        explanation=ex.get("explanation"),
+                        order=order,
+                    )
+                )
+                order += 1
+
+            for hidden in HIDDEN_TEST_CASES.get(p_data["slug"], []):
+                session.add(
+                    TestCase(
+                        problem_id=target_problem.id,
+                        input_data=hidden["input"],
+                        expected_output=hidden["output"],
+                        is_sample=False,
+                        explanation="Hidden test case for judge evaluation.",
+                        order=order,
+                    )
+                )
+                order += 1
 
     await session.commit()
     return seeded_count

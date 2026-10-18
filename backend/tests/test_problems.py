@@ -142,3 +142,41 @@ async def test_unpublished_problem_isolation(client):
                 delete(Problem).where(Problem.slug == "secret-hidden-problem")
             )
             await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_problem_detail_has_test_cases(client):
+    response = await client.get("/api/v1/problems/two-sum")
+    assert response.status_code == 200
+    data = response.json()
+    assert "test_cases" in data
+    assert len(data["test_cases"]) > 0
+    # First test case should be sample
+    first_tc = data["test_cases"][0]
+    assert "input_data" in first_tc
+    assert "expected_output" in first_tc
+    assert "is_sample" in first_tc
+
+
+@pytest.mark.asyncio
+async def test_get_problem_test_cases_samples_only(client):
+    response = await client.get("/api/v1/problems/two-sum/test-cases?samples_only=true")
+    assert response.status_code == 200
+    cases = response.json()
+    assert len(cases) > 0
+    # Every case must have is_sample == True
+    for c in cases:
+        assert c["is_sample"] is True
+
+
+@pytest.mark.asyncio
+async def test_get_problem_test_cases_all(client):
+    response = await client.get("/api/v1/problems/two-sum/test-cases?samples_only=false")
+    assert response.status_code == 200
+    cases = response.json()
+    # Should include both samples and hidden cases
+    samples = [c for c in cases if c["is_sample"]]
+    hidden = [c for c in cases if not c["is_sample"]]
+    assert len(samples) > 0
+    assert len(hidden) > 0
+
