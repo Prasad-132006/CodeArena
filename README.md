@@ -204,7 +204,7 @@ npm run build
   - Monorepo structure, Next.js, FastAPI, PostgreSQL, Redis, Docker Compose, Health endpoint, design tokens.
 - [x] **Phase 2: Authentication & Problem Library**
   - JWT auth (Argon2id + HttpOnly cookie/Bearer), user management & profiles, problem schema, tags, evaluation test cases (sample & hidden), Monaco Editor workspace, problem browsing UI.
-- [ ] **Phase 3: Docker C++ Judge Engine & Worker**
+- [x] **Phase 3: Docker C++ Judge Engine & Worker**
   - Redis RQ job worker, isolated container runner, async verdict processing, submission history.
 - [ ] **Phase 4: Deterministic Diagnostics & AI Coding Coach**
   - Compiler error parsing, output diff engine, 4-level progressive hints, zero-cost fallback.
