@@ -1,0 +1,13 @@
+FROM gcc:14.2.0-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    default-jdk-headless \
+    golang-go \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN g++ -std=c++20 -O2 /usr/local/include/c++/14.2.0/x86_64-linux-gnu/bits/stdc++.h
+RUN groupadd --gid 10001 judge && useradd --uid 10001 --gid judge --no-create-home --shell /usr/sbin/nologin judge \
+    && mkdir -p /workspace && chown judge:judge /workspace
+USER 10001:10001
+WORKDIR /workspace
+

@@ -25,7 +25,7 @@ export default function Home() {
     {
       phase: 'Phase 1',
       title: 'Monorepo & Core Infrastructure',
-      status: 'Current Milestone',
+      status: 'Completed Milestone',
       active: true,
       items: [
         'Next.js 16 (App Router, Tailwind, Lucide, Monaco)',
@@ -49,8 +49,8 @@ export default function Home() {
     {
       phase: 'Phase 3',
       title: 'Isolated C++ Judge Sandbox',
-      status: 'Planned',
-      active: false,
+      status: 'Completed Milestone',
+      active: true,
       items: [
         'Docker containerized g++ runner (no host mount)',
         'Background job queue worker with Redis & RQ',
@@ -108,8 +108,8 @@ export default function Home() {
 
           <div className="relative z-10 max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-950/60 px-3 py-1 text-xs font-semibold text-indigo-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              Phase 1 Milestone — Core Platform Foundation
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Phase 3 Completed — Isolated C++ Judge Sandbox
             </div>
 
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">

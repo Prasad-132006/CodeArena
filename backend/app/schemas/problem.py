@@ -58,9 +58,9 @@ class ProblemDetailResponse(BaseModel):
     input_format: str
     output_format: str
     starter_code: str
+    starter_codes: Optional[dict[str, str]] = None
     examples: List[Any] = Field(default_factory=list)
     tags: List[TagResponse]
-    test_cases: List[TestCaseResponse] = Field(default_factory=list)
     is_published: bool
     created_at: datetime
     updated_at: datetime

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, health, problems
+from app.api.v1.endpoints import auth, health, problems, submissions
 
 api_router = APIRouter()
 
@@ -11,6 +11,7 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # Problem management endpoints
 api_router.include_router(problems.router, prefix="/problems", tags=["Problems"])
+api_router.include_router(submissions.router, prefix="/submissions", tags=["Submissions"])
 
 # Direct /tags endpoint as specified in requirements
 api_router.add_api_route(

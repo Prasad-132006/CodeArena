@@ -44,11 +44,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <vector>\n"
-            "#include <unordered_map>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    std::vector<int> twoSum(std::vector<int>& nums, int target) {\n"
+            "    vector<int> twoSum(vector<int>& nums, int target) {\n"
             "        // Complete your solution here\n"
             "        return {};\n"
             "    }\n"
@@ -84,10 +84,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <vector>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    void reverseString(std::vector<char>& s) {\n"
+            "    void reverseString(vector<char>& s) {\n"
             "        // In-place character reversal\n"
             "    }\n"
             "};"
@@ -127,11 +128,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <string>\n"
-            "#include <cctype>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    bool isPalindrome(std::string s) {\n"
+            "    bool isPalindrome(string s) {\n"
             "        // Complete your solution here\n"
             "        return false;\n"
             "    }\n"
@@ -169,10 +170,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <vector>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    int search(std::vector<int>& nums, int target) {\n"
+            "    int search(vector<int>& nums, int target) {\n"
             "        // O(log n) binary search\n"
             "        return -1;\n"
             "    }\n"
@@ -213,11 +215,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <vector>\n"
-            "#include <algorithm>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    int maxSubArray(std::vector<int>& nums) {\n"
+            "    int maxSubArray(vector<int>& nums) {\n"
             "        // Kadane's algorithm / DP\n"
             "        return 0;\n"
             "    }\n"
@@ -261,11 +263,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <string>\n"
-            "#include <stack>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    bool isValid(std::string s) {\n"
+            "    bool isValid(string s) {\n"
             "        // Stack-based bracket balance check\n"
             "        return false;\n"
             "    }\n"
@@ -305,10 +307,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <vector>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    void merge(std::vector<int>& nums1, int m, std::vector<int>& nums2, int n) {\n"
+            "    void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {\n"
             "        // Three-pointer reverse merge\n"
             "    }\n"
             "};"
@@ -347,11 +350,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <string>\n"
-            "#include <unordered_map>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    int firstUniqChar(std::string s) {\n"
+            "    int firstUniqChar(string s) {\n"
             "        // Complete your solution here\n"
             "        return -1;\n"
             "    }\n"
@@ -391,11 +394,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <vector>\n"
-            "#include <unordered_set>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    bool containsDuplicate(std::vector<int>& nums) {\n"
+            "    bool containsDuplicate(vector<int>& nums) {\n"
             "        // Hash set duplicate detection\n"
             "        return false;\n"
             "    }\n"
@@ -432,11 +435,11 @@ SEED_PROBLEMS: List[Dict[str, Any]] = [
             }
         ],
         "starter_code": (
-            "#include <vector>\n"
-            "#include <algorithm>\n\n"
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
             "class Solution {\n"
             "public:\n"
-            "    int maxProfit(std::vector<int>& prices) {\n"
+            "    int maxProfit(vector<int>& prices) {\n"
             "        // One-pass minimum tracking\n"
             "        return 0;\n"
             "    }\n"

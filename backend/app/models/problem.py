@@ -81,8 +81,12 @@ class Problem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     input_format: Mapped[str] = mapped_column(Text, nullable=False, default="")
     output_format: Mapped[str] = mapped_column(Text, nullable=False, default="")
     starter_code: Mapped[str] = mapped_column(Text, nullable=False)  # Default C++ starter code
+    starter_codes: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, default=dict)
     examples: Mapped[Optional[list]] = mapped_column(JSON, nullable=True, default=list)
     is_published: Mapped[bool] = mapped_column(Boolean, default=True, index=True, nullable=False)
+    time_limit_ms: Mapped[int] = mapped_column(Integer, default=2000, nullable=False)
+    memory_limit_mb: Mapped[int] = mapped_column(Integer, default=256, nullable=False)
+    output_limit_kb: Mapped[int] = mapped_column(Integer, default=64, nullable=False)
 
     # Relationships
     tags: Mapped[List[Tag]] = relationship(

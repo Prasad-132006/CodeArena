@@ -94,8 +94,12 @@ Copy-Item .env.example .env
 Launch PostgreSQL, Redis, FastAPI backend, and Next.js frontend in isolated containers with a single command:
 
 ```powershell
+docker compose up -d postgres redis
+docker compose run --rm backend alembic upgrade head
 docker compose up --build
 ```
+
+The backend refreshes the seeded problem content, including starter code, whenever it starts. Restart the backend after changing a seeded problem template, then reload the problem page.
 
 - **Frontend App**: [http://localhost:3000](http://localhost:3000)
 - **FastAPI Documentation**: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
@@ -185,16 +189,9 @@ npm run build
 
 ---
 
-## 5. Security & Isolation Architecture
+## 5. Judge System
 
-1. **Untrusted Code Execution**: All user-submitted C++ code is executed exclusively inside disposable Docker containers with non-root user execution, read-only system filesystems, and strict limits.
-2. **Resource Boundaries**: Every run is enforced with hard caps:
-   - Max CPU time (e.g. 1.0s – 2.0s)
-   - Max memory (e.g. 256 MB)
-   - Max output size (truncation after 64 KB to prevent output flooding)
-   - Process count limits (fork-bomb prevention via `pids-limit`)
-3. **No Network Access**: The `--network none` flag is strictly enforced on untrusted judge runner containers.
-4. **Host Protection**: No Docker socket is mounted into untrusted runner containers.
+Phase 3 now provides durable submissions, Redis-backed asynchronous judging, and a separate Docker worker. The worker uses a disposable non-root C++20 runner with resource limits. See [JUDGE.md](JUDGE.md) for API, setup, verdict and security details. Docker is a useful isolation layer, not a complete boundary for public multi-user execution; the trusted worker has Docker socket access and a stronger sandbox such as gVisor or Firecracker is recommended before public deployment.
 
 ---
 
@@ -205,7 +202,11 @@ npm run build
 - [x] **Phase 2: Authentication & Problem Library**
   - JWT auth (Argon2id + HttpOnly cookie/Bearer), user management & profiles, problem schema, tags, evaluation test cases (sample & hidden), Monaco Editor workspace, problem browsing UI.
 - [x] **Phase 3: Docker C++ Judge Engine & Worker**
+<<<<<<< HEAD
   - Redis RQ job worker, isolated container runner, async verdict processing, submission history.
+=======
+  - Redis queue worker, isolated container runner, async verdict processing, submission history.
+>>>>>>> 7bfa846 (added new coding lanaguages in ide and added new fontes with facility of adjusting font size)
 - [ ] **Phase 4: Deterministic Diagnostics & AI Coding Coach**
   - Compiler error parsing, output diff engine, 4-level progressive hints, zero-cost fallback.
 - [ ] **Phase 5: User Analytics & Topic Recommendations**

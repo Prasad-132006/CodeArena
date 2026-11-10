@@ -5,11 +5,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.redis import close_redis_client
 from app.api.v1.router import api_router
+from app.core.database import async_session_maker
+from app.db.seed import seed_problems
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup tasks
+    # Refresh seeded problem content so starter-code edits reach existing databases.
+    async with async_session_maker() as session:
+        await seed_problems(session)
     yield
     # Shutdown tasks
     await close_redis_client()

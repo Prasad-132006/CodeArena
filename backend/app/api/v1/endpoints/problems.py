@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
+from app.judge.languages import LanguageRegistry
 from app.models.problem import Problem, Tag, TestCase, problem_tags
 from app.schemas.problem import (
     ProblemDetailResponse,
@@ -161,7 +162,12 @@ async def get_problem_by_slug(
             detail=f"Problem '{slug}' not found or is currently unpublished.",
         )
 
-    return ProblemDetailResponse.model_validate(problem)
+    resp = ProblemDetailResponse.model_validate(problem)
+    if not resp.starter_codes:
+        starter_map = {l.id: l.starter_code for l in LanguageRegistry.list_all()}
+        starter_map["cpp"] = problem.starter_code
+        resp.starter_codes = starter_map
+    return resp
 
 
 @router.get(
@@ -189,8 +195,8 @@ async def get_problem_test_cases(
         )
 
     tc_stmt = select(TestCase).where(TestCase.problem_id == problem.id)
-    if samples_only:
-        tc_stmt = tc_stmt.where(TestCase.is_sample.is_(True))
+    # Hidden cases are authoritative judge data and are never exposed via this public API.
+    tc_stmt = tc_stmt.where(TestCase.is_sample.is_(True))
     tc_stmt = tc_stmt.order_by(TestCase.order.asc())
 
     tc_res = await db.execute(tc_stmt)

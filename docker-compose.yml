@@ -63,6 +63,44 @@ services:
     networks:
       - codearena_net
 
+  judge-runner-image:
+    image: codearena-cpp-runner:1.0
+    build:
+      context: ./judge
+      dockerfile: Dockerfile.runner
+    command: ["true"]
+    restart: "no"
+
+  judge-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    container_name: codearena_judge_worker
+    restart: unless-stopped
+    environment:
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-codearena}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-codearena_secret}
+      - POSTGRES_DB=${POSTGRES_DB:-codearena_db}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JUDGE_IMAGE=codearena-cpp-runner:1.0
+      - JUDGE_WORKSPACE_ROOT=/judge-workspaces
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+      - judge_workspaces:/judge-workspaces
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      judge-runner-image:
+        condition: service_completed_successfully
+    networks:
+      - codearena_net
+
   frontend:
     build:
       context: ./frontend
@@ -89,3 +127,5 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  judge_workspaces:
+    name: codearena_judge_workspaces

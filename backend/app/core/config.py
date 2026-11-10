@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = ""
+    MAX_SOURCE_CODE_BYTES: int = 100_000
+    JUDGE_IMAGE: str = "codearena-cpp-runner:1.0"
+    JUDGE_COMPILATION_TIMEOUT_SECONDS: int = 20
+    JUDGE_QUEUE_NAME: str = "codearena:judge"
+    JUDGE_WORKSPACE_ROOT: str = "/judge-workspaces"
 
     @computed_field
     @property

@@ -1,28 +1,43 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/Navbar';
-import { fetchProblemBySlug } from '@/lib/api';
-import { ProblemDetail, Difficulty, TestCase } from '@/types';
+import { FontSelector } from '@/components/FontSelector';
+import { FontSizeSelector } from '@/components/FontSizeSelector';
+import { createSubmission, fetchProblemBySlug, fetchProblemTestCases, fetchSubmission, fetchSubmissionHistory } from '@/lib/api';
+import {
+  ProblemDetail,
+  Difficulty,
+  TestCase,
+  Submission,
+  SUPPORTED_LANGUAGES,
+  SupportedLanguage,
+  EditorFontId,
+  DEFAULT_EDITOR_FONT_ID,
+  EDITOR_FONTS,
+  getEditorFont,
+  DEFAULT_EDITOR_FONT_SIZE,
+  MIN_EDITOR_FONT_SIZE,
+  MAX_EDITOR_FONT_SIZE,
+} from '@/types';
+import { useAuth } from '@/context/AuthContext';
 import {
   ArrowLeft,
   Tag as TagIcon,
   Copy,
   Check,
-  CodeXml,
   AlertCircle,
   FileCode2,
   Terminal,
-  Cpu,
-  RefreshCw,
   Play,
   RotateCcw,
   CheckCircle2,
   Lock,
   Layers,
+  Code2,
 } from 'lucide-react';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
@@ -30,7 +45,7 @@ const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   loading: () => (
     <div className="h-[420px] flex items-center justify-center bg-slate-950 text-slate-500 font-mono text-xs border border-slate-800 rounded-xl">
       <span className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mr-2" />
-      Initializing Monaco C++ Editor...
+      Initializing Monaco Code Editor...
     </div>
   ),
 });
@@ -40,11 +55,112 @@ function ProblemDetailContent() {
   const slug = params?.slug as string;
 
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
+  const [selectedLang, setSelectedLang] = useState<SupportedLanguage>('cpp');
+  const [codeByLang, setCodeByLang] = useState<Record<string, string>>({});
   const [userCode, setUserCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [selectedTestCaseIdx, setSelectedTestCaseIdx] = useState<number>(0);
+  const [activeSubmission, setActiveSubmission] = useState<Submission | null>(null);
+  const [history, setHistory] = useState<Submission[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pollRetry, setPollRetry] = useState(0);
+  const [selectedFontId, setSelectedFontId] = useState<EditorFontId>(DEFAULT_EDITOR_FONT_ID);
+  const [fontSize, setFontSize] = useState<number>(DEFAULT_EDITOR_FONT_SIZE);
+  const editorRef = useRef<any>(null);
+  const monacoRef = useRef<any>(null);
+  const { user } = useAuth();
+
+  const currentLangInfo = SUPPORTED_LANGUAGES.find((l) => l.id === selectedLang) || SUPPORTED_LANGUAGES[0];
+  const currentFontInfo = getEditorFont(selectedFontId);
+
+  // Restore font & size preferences from localStorage
+  useEffect(() => {
+    try {
+      const savedFont = localStorage.getItem('codearena_editor_font') as EditorFontId | null;
+      if (savedFont && EDITOR_FONTS.some((f) => f.id === savedFont)) {
+        setSelectedFontId(savedFont);
+      }
+    } catch {
+      // In case localStorage is disabled or restricted
+    }
+
+    try {
+      const savedSize = localStorage.getItem('codearena_editor_font_size');
+      if (savedSize) {
+        const parsed = parseInt(savedSize, 10);
+        if (!isNaN(parsed) && parsed >= MIN_EDITOR_FONT_SIZE && parsed <= MAX_EDITOR_FONT_SIZE) {
+          setFontSize(parsed);
+        }
+      }
+    } catch {
+      // In case localStorage is disabled or restricted
+    }
+  }, []);
+
+  const handleFontChange = (newFontId: EditorFontId) => {
+    setSelectedFontId(newFontId);
+    try {
+      localStorage.setItem('codearena_editor_font', newFontId);
+    } catch (err) {
+      console.error('Failed to persist editor font preference:', err);
+    }
+    const targetFont = getEditorFont(newFontId);
+    if (editorRef.current) {
+      editorRef.current.updateOptions({
+        fontFamily: targetFont.fontFamily,
+        fontLigatures: targetFont.ligatures,
+      });
+    }
+    if (monacoRef.current?.editor?.remeasureFonts) {
+      requestAnimationFrame(() => {
+        monacoRef.current?.editor?.remeasureFonts();
+      });
+    }
+  };
+
+  const handleFontSizeChange = (newSize: number) => {
+    const clamped = Math.max(MIN_EDITOR_FONT_SIZE, Math.min(MAX_EDITOR_FONT_SIZE, Math.round(newSize)));
+    setFontSize(clamped);
+    try {
+      localStorage.setItem('codearena_editor_font_size', clamped.toString());
+    } catch (err) {
+      console.error('Failed to persist editor font size:', err);
+    }
+    if (editorRef.current) {
+      editorRef.current.updateOptions({
+        fontSize: clamped,
+      });
+    }
+    if (monacoRef.current?.editor?.remeasureFonts) {
+      requestAnimationFrame(() => {
+        monacoRef.current?.editor?.remeasureFonts();
+      });
+    }
+  };
+
+  const handleResetTypography = () => {
+    handleFontChange(DEFAULT_EDITOR_FONT_ID);
+    handleFontSizeChange(DEFAULT_EDITOR_FONT_SIZE);
+  };
+
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+    const activeFont = getEditorFont(selectedFontId);
+    editor.updateOptions({
+      fontFamily: activeFont.fontFamily,
+      fontLigatures: activeFont.ligatures,
+      fontSize: fontSize,
+    });
+    if (typeof document !== 'undefined' && 'fonts' in document) {
+      document.fonts.ready.then(() => {
+        monaco.editor.remeasureFonts();
+      });
+    }
+  };
 
   useEffect(() => {
     if (!slug) return;
@@ -53,9 +169,21 @@ function ProblemDetailContent() {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const data = await fetchProblemBySlug(slug);
-        setProblem(data);
-        setUserCode(data.starter_code);
+        const [data, samples] = await Promise.all([
+          fetchProblemBySlug(slug),
+          fetchProblemTestCases(slug, true).catch(() => []),
+        ]);
+        const starterMap: Record<string, string> = {
+          cpp: data.starter_code,
+          c: '#include <stdio.h>\n\nint main() {\n    // Read input and write output\n    return 0;\n}\n',
+          java: 'import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        // Read input and write output\n    }\n}\n',
+          python: 'import sys\n\ndef main():\n    # Read input from sys.stdin and write output to sys.stdout\n    pass\n\nif __name__ == "__main__":\n    main()\n',
+          go: 'package main\n\nimport (\n    "fmt"\n)\n\nfunc main() {\n    // Read input and write output\n}\n',
+          ...(data.starter_codes || {}),
+        };
+        setProblem({ ...data, test_cases: samples });
+        setCodeByLang(starterMap);
+        setUserCode(starterMap[selectedLang] || data.starter_code);
       } catch (err: unknown) {
         setErrorMessage(
           err instanceof Error ? err.message : 'Unable to retrieve problem details.'
@@ -68,6 +196,47 @@ function ProblemDetailContent() {
     loadProblem();
   }, [slug]);
 
+  const handleLanguageChange = (newLang: SupportedLanguage) => {
+    setCodeByLang((prev) => ({ ...prev, [selectedLang]: userCode }));
+    setSelectedLang(newLang);
+    const nextCode = codeByLang[newLang] || problem?.starter_codes?.[newLang] || (newLang === 'cpp' ? problem?.starter_code : '') || '';
+    setUserCode(nextCode);
+  };
+
+  useEffect(() => {
+    if (!activeSubmission || ['COMPLETED', 'FAILED'].includes(activeSubmission.status)) return;
+    const timer = window.setTimeout(async () => {
+      try {
+        const refreshed = await fetchSubmission(activeSubmission.id);
+        setActiveSubmission(refreshed);
+        setHistory((previous) => previous.map((item) => item.id === refreshed.id ? refreshed : item));
+      }
+      catch (error) {
+        setActionError(error instanceof Error ? error.message : 'Status polling failed.');
+        setPollRetry((retry) => retry + 1);
+      }
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [activeSubmission, pollRetry]);
+
+  useEffect(() => {
+    if (!problem || !user) return;
+    fetchSubmissionHistory(problem.id).then(setHistory).catch(() => setHistory([]));
+  }, [problem, user]);
+
+  const handleJudge = async (action: 'run' | 'submit') => {
+    setActionError(null);
+    if (!user) { setActionError('Sign in to run or submit a solution.'); return; }
+    setIsSubmitting(true);
+    try {
+      const queued = await createSubmission(slug, action, userCode, selectedLang);
+      setActiveSubmission(queued);
+      setHistory((previous) => [queued, ...previous].slice(0, 20));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Unable to queue solution.');
+    } finally { setIsSubmitting(false); }
+  };
+
   const handleCopyCode = () => {
     if (userCode) {
       navigator.clipboard.writeText(userCode);
@@ -77,8 +246,10 @@ function ProblemDetailContent() {
   };
 
   const handleResetCode = () => {
-    if (problem?.starter_code) {
-      setUserCode(problem.starter_code);
+    const defaultCode = problem?.starter_codes?.[selectedLang] || (selectedLang === 'cpp' ? problem?.starter_code : '');
+    if (defaultCode) {
+      setUserCode(defaultCode);
+      setCodeByLang((prev) => ({ ...prev, [selectedLang]: defaultCode }));
     }
   };
 
@@ -120,8 +291,6 @@ function ProblemDetailContent() {
           order: idx,
         })) || [];
 
-  const hiddenCount =
-    problem?.test_cases ? problem.test_cases.filter((tc) => !tc.is_sample).length : 2;
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col">
@@ -250,7 +419,7 @@ function ProblemDetailContent() {
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 text-indigo-400 ring-1 ring-indigo-500/20">
                       <Lock className="h-2.5 w-2.5" />
-                      {hiddenCount} Judge Hidden
+                      Hidden suite
                     </span>
                   </div>
                 </div>
@@ -315,17 +484,50 @@ function ProblemDetailContent() {
             {/* Right Column: Interactive Monaco C++ Editor Workspace (7 cols) */}
             <div className="lg:col-span-7 space-y-4">
               <div className="rounded-2xl border border-slate-800 bg-slate-900/60 shadow-xl backdrop-blur-sm overflow-hidden">
-                {/* Editor Top Bar */}
+                {/* Editor Top Bar with Language Selector */}
                 <div className="flex flex-wrap items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-950/70 gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <FileCode2 className="h-4 w-4 text-indigo-400" />
-                    <span className="text-xs font-semibold text-white">Solution.cpp</span>
-                    <span className="rounded-md bg-slate-800/80 px-2 py-0.5 text-[10px] font-mono text-indigo-300 ring-1 ring-slate-700/50">
-                      C++20 (g++ 13)
-                    </span>
+                  <div className="flex items-center gap-3">
+                    {/* Language Selector Dropdown */}
+                    <div className="flex items-center gap-2">
+                      <Code2 className="h-4 w-4 text-indigo-400" />
+                      <select
+                        value={selectedLang}
+                        onChange={(e) => handleLanguageChange(e.target.value as SupportedLanguage)}
+                        className="rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white hover:border-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition cursor-pointer"
+                        title="Select programming language"
+                      >
+                        {SUPPORTED_LANGUAGES.map((lang) => (
+                          <option key={lang.id} value={lang.id} className="bg-slate-900 text-white">
+                            {lang.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2 border-l border-slate-800 pl-3">
+                      <FileCode2 className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="text-xs font-mono text-slate-300">{currentLangInfo.filename}</span>
+                      <span className="rounded-md bg-slate-800/80 px-2 py-0.5 text-[10px] font-mono text-indigo-300 ring-1 ring-slate-700/50">
+                        {currentLangInfo.runtime}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {/* Font Family Selector Dropdown */}
+                    <FontSelector
+                      selectedFontId={selectedFontId}
+                      onSelectFont={handleFontChange}
+                      onResetTypography={handleResetTypography}
+                    />
+
+                    {/* Font Size Selector (Stepper + Slider) */}
+                    <FontSizeSelector
+                      fontSize={fontSize}
+                      onFontSizeChange={handleFontSizeChange}
+                      onResetTypography={handleResetTypography}
+                    />
+
                     <button
                       onClick={handleResetCode}
                       className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-400 hover:text-white hover:border-slate-700 transition"
@@ -358,12 +560,15 @@ function ProblemDetailContent() {
                 <div className="p-1 bg-[#1e1e1e]">
                   <MonacoEditor
                     height="500px"
-                    language="cpp"
+                    language={currentLangInfo.monaco_id}
                     theme="vs-dark"
                     value={userCode}
                     onChange={(val) => setUserCode(val || '')}
+                    onMount={handleEditorDidMount}
                     options={{
-                      fontSize: 13,
+                      fontFamily: currentFontInfo.fontFamily,
+                      fontLigatures: currentFontInfo.ligatures,
+                      fontSize: fontSize,
                       lineNumbers: 'on',
                       minimap: { enabled: false },
                       scrollBeyondLastLine: false,
@@ -374,21 +579,24 @@ function ProblemDetailContent() {
                   />
                 </div>
 
-                {/* Editor Bottom Status Bar & Phase 3 Sandbox Hook */}
+                {/* Editor actions and confirmed judge result */}
                 <div className="p-4 border-t border-slate-800 bg-slate-950/80 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <Terminal className="h-4 w-4 text-indigo-400" />
-                    <span>Memory cap: 256MB &bull; CPU limit: 1.5s &bull; Network: Isolated</span>
+                    <span>Run checks public examples. Submit checks the complete judge suite.</span>
                   </div>
 
                   <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-950/30 px-3.5 py-2 text-xs font-medium text-indigo-300">
-                      <Cpu className="h-3.5 w-3.5 text-indigo-400 animate-pulse" />
-                      <span>Judge Sandbox: Phase 3 Ready</span>
-                    </div>
+                    <button disabled={isSubmitting || (!!activeSubmission && !['COMPLETED','FAILED'].includes(activeSubmission.status))} onClick={() => handleJudge('run')} className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 disabled:opacity-50"><Play className="h-4 w-4" />Run Code</button>
+                    <button disabled={isSubmitting || (!!activeSubmission && !['COMPLETED','FAILED'].includes(activeSubmission.status))} onClick={() => handleJudge('submit')} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"><CheckCircle2 className="h-4 w-4" />Submit</button>
                   </div>
                 </div>
+                {(actionError || activeSubmission) && <section aria-live="polite" className="border-t border-slate-800 bg-slate-950 p-4 text-sm">
+                  {actionError && <p className="mb-2 text-rose-300">{actionError}</p>}
+                  {activeSubmission && <><div className="flex flex-wrap items-center gap-3"><strong className="text-white">{activeSubmission.verdict || activeSubmission.status}</strong><span className="text-slate-400">{activeSubmission.passed_test_cases}/{activeSubmission.total_test_cases} tests passed</span>{activeSubmission.execution_time_ms != null && <span className="text-slate-400">{activeSubmission.execution_time_ms} ms</span>}</div>{activeSubmission.error_message && <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-black/40 p-3 text-xs text-rose-200">{activeSubmission.error_message}</pre>}{activeSubmission.case_results?.map((result) => <div key={result.test_case} className="mt-2 text-xs"><span className={result.passed ? 'text-emerald-300' : 'text-rose-300'}>Sample {result.test_case}: {result.passed ? 'Passed' : 'Failed'}</span>{!result.passed && <pre className="mt-1 max-h-24 overflow-auto whitespace-pre-wrap text-slate-400">{result.actual_output}</pre>}</div>)}</>}
+                </section>}
               </div>
+              <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"><h2 className="text-sm font-semibold text-white">Recent submissions</h2>{history.length === 0 ? <p className="mt-3 text-xs text-slate-400">No submissions yet.</p> : <ul className="mt-3 space-y-2">{history.map((item) => <li key={item.id} className="flex justify-between border-t border-slate-800 pt-2 text-xs"><span className="text-slate-300">{item.submission_type} · {new Date(item.created_at).toLocaleString()}</span><span className="text-indigo-300">{item.verdict || item.status}</span></li>)}</ul>}</section>
             </div>
           </div>
         )}

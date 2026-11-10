@@ -6,10 +6,42 @@ import {
   Tag,
   TestCase,
   User,
+  Submission,
 } from '@/types';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+export async function createSubmission(
+  slug: string,
+  action: 'run' | 'submit',
+  source_code: string,
+  language: string = 'cpp'
+): Promise<Submission> {
+  const res = await fetch(`${API_BASE_URL}/submissions/problems/${encodeURIComponent(slug)}/${action}`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ source_code, language }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Unable to queue submission.');
+  return data;
+}
+
+export async function fetchSubmission(id: string): Promise<Submission> {
+  const res = await fetch(`${API_BASE_URL}/submissions/${encodeURIComponent(id)}`, { headers: getHeaders(), credentials: 'include', cache: 'no-store' });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Unable to retrieve submission.');
+  return data;
+}
+
+export async function fetchSubmissionHistory(problemId: string): Promise<Submission[]> {
+  const query = new URLSearchParams({ problem_id: problemId, page_size: '20' });
+  const res = await fetch(`${API_BASE_URL}/submissions?${query}`, { headers: getHeaders(), credentials: 'include', cache: 'no-store' });
+  if (!res.ok) throw new Error('Unable to retrieve submission history.');
+  return res.json();
+}
 
 // In-memory token store for backup Authorization header
 let inMemoryToken: string | null = null;
