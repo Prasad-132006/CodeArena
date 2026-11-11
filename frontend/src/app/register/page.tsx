@@ -3,9 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
 import { useAuth } from '@/context/AuthContext';
-import { Eye, EyeOff, Lock, Mail, User, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, ArrowRight, AlertCircle, Terminal } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -78,200 +77,207 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col">
-      <Navbar />
+    <div className="min-h-screen bg-[#0D1117] text-[#F0F3F6] flex flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        {/* Card Container */}
+        <div className="rounded-2xl border border-[#273244] bg-[#161D27] p-8 shadow-2xl">
+          {/* Back link */}
+          <div className="mb-6">
+            <Link
+              href="/problems"
+              className="inline-flex items-center gap-1.5 text-xs text-[#929BA8] hover:text-[#FFA116] transition-colors"
+            >
+              <span>←</span>
+              <span>Back to CodeArena</span>
+            </Link>
+          </div>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md">
-          {/* Card Container */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 shadow-2xl backdrop-blur-xl">
-            {/* Header */}
-            <div className="text-center">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600/20 text-indigo-400 ring-1 ring-indigo-500/30 mb-4">
-                <Lock className="h-6 w-6" />
+          {/* Header */}
+          <div className="text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#FFA116]/10 text-[#FFA116] mb-4">
+              <Terminal className="h-6 w-6" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-[#F0F3F6]">
+              Create your account
+            </h1>
+            <p className="mt-2 text-xs text-[#929BA8]">
+              Join CodeArena to start solving problems and track your progress.
+            </p>
+          </div>
+
+          {/* Error Notification */}
+          {errorMessage && (
+            <div
+              role="alert"
+              className="mt-6 flex items-start gap-3 rounded-xl border border-[#EF4743]/30 bg-[#EF4743]/10 p-3.5 text-xs text-[#EF4743]"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            {/* Display Name */}
+            <div>
+              <label
+                htmlFor="displayName"
+                className="block text-xs font-medium text-[#929BA8] mb-1.5"
+              >
+                Display Name
+              </label>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#929BA8]">
+                  <User className="h-4 w-4" />
+                </div>
+                <input
+                  id="displayName"
+                  name="displayName"
+                  type="text"
+                  required
+                  autoComplete="name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Ada Lovelace"
+                  className="w-full rounded-xl border border-[#273244] bg-[#1C2532] py-2.5 pl-10 pr-3 text-sm text-[#F0F3F6] placeholder-[#929BA8]/60 transition focus:border-[#FFA116] focus:outline-none focus:ring-1 focus:ring-[#FFA116]/50"
+                />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-white">
-                Create your account
-              </h1>
-              <p className="mt-2 text-xs text-slate-400">
-                Join CodeArena to start solving problems and getting AI-powered diagnostics.
-              </p>
             </div>
 
-            {/* Error Notification */}
-            {errorMessage && (
-              <div
-                role="alert"
-                className="mt-6 flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-950/40 p-3.5 text-xs text-rose-300"
+            {/* Email Address */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-xs font-medium text-[#929BA8] mb-1.5"
               >
-                <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{errorMessage}</span>
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              {/* Display Name */}
-              <div>
-                <label
-                  htmlFor="displayName"
-                  className="block text-xs font-medium text-slate-300 mb-1.5"
-                >
-                  Display Name
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                    <User className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="displayName"
-                    name="displayName"
-                    type="text"
-                    required
-                    autoComplete="name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Ada Lovelace"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 py-2.5 pl-10 pr-3 text-sm text-slate-100 placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#929BA8]">
+                  <Mail className="h-4 w-4" />
                 </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="developer@example.com"
+                  className="w-full rounded-xl border border-[#273244] bg-[#1C2532] py-2.5 pl-10 pr-3 text-sm text-[#F0F3F6] placeholder-[#929BA8]/60 transition focus:border-[#FFA116] focus:outline-none focus:ring-1 focus:ring-[#FFA116]/50"
+                />
               </div>
-
-              {/* Email Address */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-medium text-slate-300 mb-1.5"
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="developer@example.com"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 py-2.5 pl-10 pr-3 text-sm text-slate-100 placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-medium text-slate-300 mb-1.5"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                    <Lock className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 chars, letter & number"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-xs font-medium text-slate-300 mb-1.5"
-                >
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                    <Lock className="h-4 w-4" />
-                  </div>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat your password"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300"
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Creating account...</span>
-                  </span>
-                ) : (
-                  <>
-                    <span>Create Account</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Footer link to Login */}
-            <div className="mt-6 text-center text-xs text-slate-400">
-              Already have an account?{' '}
-              <Link
-                href="/login"
-                className="font-semibold text-indigo-400 hover:text-indigo-300 transition"
-              >
-                Sign in here
-              </Link>
             </div>
+
+            {/* Password */}
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-xs font-medium text-[#929BA8] mb-1.5"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#929BA8]">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 chars, letter &amp; number"
+                  className="w-full rounded-xl border border-[#273244] bg-[#1C2532] py-2.5 pl-10 pr-10 text-sm text-[#F0F3F6] placeholder-[#929BA8]/60 transition focus:border-[#FFA116] focus:outline-none focus:ring-1 focus:ring-[#FFA116]/50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#929BA8] hover:text-[#F0F3F6] transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-xs font-medium text-[#929BA8] mb-1.5"
+              >
+                Confirm Password
+              </label>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#929BA8]">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat your password"
+                  className="w-full rounded-xl border border-[#273244] bg-[#1C2532] py-2.5 pl-10 pr-10 text-sm text-[#F0F3F6] placeholder-[#929BA8]/60 transition focus:border-[#FFA116] focus:outline-none focus:ring-1 focus:ring-[#FFA116]/50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#929BA8] hover:text-[#F0F3F6] transition-colors"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-[#FFA116] py-3 text-sm font-semibold text-black shadow-lg shadow-[#FFA116]/20 hover:bg-[#FFA116]/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  <span>Creating account...</span>
+                </span>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer link to Login */}
+          <div className="mt-6 text-center text-xs text-[#929BA8]">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="font-semibold text-[#FFA116] hover:underline transition"
+            >
+              Sign in here
+            </Link>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { fetchProblems, fetchTags } from '@/lib/api';
 import { ProblemItem, Tag, Difficulty } from '@/types';
@@ -16,11 +16,9 @@ import {
   AlertCircle,
   RefreshCw,
   Tag as TagIcon,
-  Sparkles,
 } from 'lucide-react';
 
 function ProblemsContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // URL state synchronization
@@ -95,7 +93,9 @@ function ProblemsContent() {
 
   // Trigger problem fetch and update URL params
   useEffect(() => {
-    loadProblems();
+    const timer = setTimeout(() => {
+      loadProblems();
+    }, 0);
 
     // Sync to URL
     const params = new URLSearchParams();
@@ -107,6 +107,8 @@ function ProblemsContent() {
     const queryString = params.toString();
     const newPath = queryString ? `/problems?${queryString}` : '/problems';
     window.history.replaceState(null, '', newPath);
+
+    return () => clearTimeout(timer);
   }, [loadProblems, currentPage, debouncedSearch, selectedDifficulty, selectedTag]);
 
   // Reset all filters
@@ -122,19 +124,19 @@ function ProblemsContent() {
     switch (difficulty) {
       case 'Easy':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#2CBB5D]/10 text-[#2CBB5D] ring-1 ring-[#2CBB5D]/20">
             Easy
           </span>
         );
       case 'Medium':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FFA116]/10 text-[#FFA116] ring-1 ring-[#FFA116]/20">
             Medium
           </span>
         );
       case 'Hard':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EF4743]/10 text-[#EF4743] ring-1 ring-[#EF4743]/20">
             Hard
           </span>
         );
@@ -144,22 +146,22 @@ function ProblemsContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0D1117] text-[#F0F3F6] flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#273244]">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <h1 className="text-3xl font-extrabold tracking-tight text-white">
                 Problem Library
               </h1>
-              <span className="rounded-full bg-indigo-950/80 px-2.5 py-0.5 text-xs font-semibold text-indigo-400 ring-1 ring-indigo-500/30">
+              <span className="rounded-full bg-[#FFA116]/10 px-2.5 py-0.5 text-xs font-semibold text-[#FFA116] border border-[#FFA116]/20">
                 {totalCount} {totalCount === 1 ? 'problem' : 'problems'}
               </span>
             </div>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-[#929BA8]">
               Explore C++ coding challenges with detailed constraints, starter templates, and test specifications.
             </p>
           </div>
@@ -169,7 +171,7 @@ function ProblemsContent() {
         <div className="mt-6 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           {/* Search Input */}
           <div className="relative flex-1 max-w-lg">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#929BA8]">
               <Search className="h-4 w-4" />
             </div>
             <input
@@ -180,7 +182,7 @@ function ProblemsContent() {
                 setCurrentPage(1);
               }}
               placeholder="Search problems by title or keyword..."
-              className="w-full rounded-xl border border-slate-800 bg-slate-900/80 py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-[#273244] bg-[#161D27] py-2.5 pl-10 pr-10 text-sm text-[#F0F3F6] placeholder-[#929BA8] transition focus:border-[#FFA116] focus:outline-none focus:ring-1 focus:ring-[#FFA116]"
             />
             {searchQuery && (
               <button
@@ -189,7 +191,7 @@ function ProblemsContent() {
                   setDebouncedSearch('');
                   setCurrentPage(1);
                 }}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#929BA8] hover:text-[#F0F3F6] transition"
                 aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
@@ -200,7 +202,7 @@ function ProblemsContent() {
           {/* Difficulty & Tag Controls */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Difficulty Pill Selectors */}
-            <div className="flex items-center rounded-xl border border-slate-800 bg-slate-900/60 p-1">
+            <div className="flex items-center rounded-xl border border-[#273244] bg-[#161D27] p-1">
               {['All', 'Easy', 'Medium', 'Hard'].map((diff) => (
                 <button
                   key={diff}
@@ -210,8 +212,8 @@ function ProblemsContent() {
                   }}
                   className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
                     selectedDifficulty === diff
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      ? 'bg-[#FFA116] text-black font-semibold shadow-sm'
+                      : 'text-[#929BA8] hover:text-[#F0F3F6] hover:bg-[#1C2532]'
                   }`}
                 >
                   {diff}
@@ -227,7 +229,7 @@ function ProblemsContent() {
                   setSelectedTag(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="appearance-none rounded-xl border border-slate-800 bg-slate-900/80 py-2 pl-3.5 pr-8 text-xs font-medium text-slate-300 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                className="appearance-none rounded-xl border border-[#273244] bg-[#161D27] py-2 pl-3.5 pr-8 text-xs font-medium text-[#929BA8] transition focus:border-[#FFA116] focus:outline-none focus:ring-1 focus:ring-[#FFA116] cursor-pointer"
               >
                 <option value="All">All Topics</option>
                 {tags.map((t) => (
@@ -236,7 +238,7 @@ function ProblemsContent() {
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-500">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-[#929BA8]">
                 <Filter className="h-3 w-3" />
               </div>
             </div>
@@ -245,7 +247,7 @@ function ProblemsContent() {
             {(searchQuery || selectedDifficulty !== 'All' || selectedTag !== 'All') && (
               <button
                 onClick={resetFilters}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+                className="flex items-center gap-1.5 rounded-xl border border-[#273244] bg-transparent px-3 py-2 text-xs font-medium text-[#929BA8] hover:text-[#F0F3F6] hover:bg-[#1C2532] transition"
               >
                 <RefreshCw className="h-3 w-3" />
                 <span>Reset</span>
@@ -255,25 +257,25 @@ function ProblemsContent() {
         </div>
 
         {/* Problems Table / List */}
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-xl">
+        <div className="mt-6 rounded-xl border border-[#273244] bg-[#161D27] overflow-hidden">
           {isLoading ? (
             /* Skeleton Loading State */
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-3">
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-4 rounded-xl bg-slate-900/80 animate-pulse border border-slate-800/60"
+                  className="flex items-center justify-between p-4 rounded-xl bg-[#1C2532] animate-pulse border border-[#273244]"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-8 w-8 rounded-lg bg-slate-800" />
+                    <div className="h-8 w-8 rounded-lg bg-[#273244]" />
                     <div className="space-y-2">
-                      <div className="h-4 w-48 rounded bg-slate-800" />
-                      <div className="h-3 w-28 rounded bg-slate-800/60" />
+                      <div className="h-4 w-48 rounded bg-[#273244]" />
+                      <div className="h-3 w-28 rounded bg-[#273244]/60" />
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="h-5 w-16 rounded-full bg-slate-800" />
-                    <div className="h-5 w-20 rounded bg-slate-800/60" />
+                    <div className="h-5 w-16 rounded-full bg-[#273244]" />
+                    <div className="h-5 w-20 rounded bg-[#273244]/60" />
                   </div>
                 </div>
               ))}
@@ -281,18 +283,18 @@ function ProblemsContent() {
           ) : isError ? (
             /* Error & Retry State */
             <div className="p-12 text-center">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20 mb-4">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#EF4743]/10 text-[#EF4743] ring-1 ring-[#EF4743]/20 mb-4">
                 <AlertCircle className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-semibold text-white">
+              <h3 className="text-base font-semibold text-[#F0F3F6]">
                 Failed to load problem library
               </h3>
-              <p className="mt-1 text-xs text-slate-400 max-w-sm mx-auto">
+              <p className="mt-1 text-xs text-[#929BA8] max-w-sm mx-auto">
                 {errorMessage}
               </p>
               <button
                 onClick={loadProblems}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/20"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#FFA116]/10 border border-[#FFA116]/20 px-4 py-2 text-xs font-semibold text-[#FFA116] hover:bg-[#FFA116] hover:text-black transition"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 <span>Retry Connection</span>
@@ -301,18 +303,18 @@ function ProblemsContent() {
           ) : problems.length === 0 ? (
             /* Empty State */
             <div className="p-16 text-center">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-400 ring-1 ring-indigo-500/20 mb-4">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#FFA116]/10 text-[#FFA116] ring-1 ring-[#FFA116]/20 mb-4">
                 <CodeXml className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-semibold text-white">
+              <h3 className="text-base font-semibold text-[#F0F3F6]">
                 No problems match your criteria
               </h3>
-              <p className="mt-1 text-xs text-slate-400 max-w-xs mx-auto">
+              <p className="mt-1 text-xs text-[#929BA8] max-w-xs mx-auto">
                 Try searching with different keywords or clearing your active difficulty and topic filters.
               </p>
               <button
                 onClick={resetFilters}
-                className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition"
+                className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-[#273244] bg-[#1C2532] px-4 py-2 text-xs font-semibold text-[#F0F3F6] hover:bg-[#273244] hover:text-white transition"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 <span>Clear Filters</span>
@@ -320,21 +322,21 @@ function ProblemsContent() {
             </div>
           ) : (
             /* Problem Listing */
-            <div className="divide-y divide-slate-800/80">
+            <div className="divide-y divide-[#273244]">
               {problems.map((problem, index) => (
                 <div
                   key={problem.id}
-                  className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 transition hover:bg-slate-850/50"
+                  className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 transition hover:bg-[#1C2532]"
                 >
                   {/* Left: Index & Title */}
                   <div className="flex items-start gap-4">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-800/70 text-xs font-mono font-medium text-slate-400 group-hover:bg-indigo-600/20 group-hover:text-indigo-300 transition">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1C2532] text-xs font-mono font-medium text-[#929BA8] transition">
                       {(currentPage - 1) * 10 + index + 1}
                     </span>
                     <div>
                       <Link
                         href={`/problems/${problem.slug}`}
-                        className="text-base font-semibold text-white group-hover:text-indigo-400 transition"
+                        className="text-base font-medium text-[#F0F3F6] hover:text-[#FFA116] transition"
                       >
                         {problem.title}
                       </Link>
@@ -348,9 +350,9 @@ function ProblemsContent() {
                               setSelectedTag(tag.slug);
                               setCurrentPage(1);
                             }}
-                            className="inline-flex items-center gap-1 rounded-md bg-slate-800/80 px-2 py-0.5 text-[11px] text-slate-300 hover:bg-indigo-950/60 hover:text-indigo-300 hover:ring-1 hover:ring-indigo-500/30 transition"
+                            className="inline-flex items-center gap-1 rounded-md bg-[#1C2532] px-2 py-0.5 text-[11px] text-[#929BA8] hover:text-[#FFA116] transition"
                           >
-                            <TagIcon className="h-2.5 w-2.5 text-slate-500" />
+                            <TagIcon className="h-2.5 w-2.5" />
                             <span>{tag.name}</span>
                           </button>
                         ))}
@@ -363,10 +365,9 @@ function ProblemsContent() {
                     {getDifficultyBadge(problem.difficulty)}
                     <Link
                       href={`/problems/${problem.slug}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-300 group-hover:border-indigo-500/40 group-hover:bg-indigo-600/20 group-hover:text-white transition"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#FFA116]/20 bg-[#FFA116]/10 px-3 py-1.5 text-xs font-semibold text-[#FFA116] hover:bg-[#FFA116] hover:text-black transition"
                     >
-                      <span>Inspect</span>
-                      <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>Solve</span>
                     </Link>
                   </div>
                 </div>
@@ -377,17 +378,17 @@ function ProblemsContent() {
 
         {/* Pagination Bar */}
         {!isLoading && totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-6 flex items-center justify-between text-xs text-[#929BA8]">
             <div>
-              Showing page <span className="font-semibold text-slate-200">{currentPage}</span> of{' '}
-              <span className="font-semibold text-slate-200">{totalPages}</span> ({totalCount} total)
+              Showing page <span className="font-semibold text-[#F0F3F6]">{currentPage}</span> of{' '}
+              <span className="font-semibold text-[#F0F3F6]">{totalPages}</span> ({totalCount} total)
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage <= 1}
-                className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 rounded-lg border border-[#273244] bg-[#161D27] px-3 py-1.5 font-medium text-[#929BA8] hover:bg-[#1C2532] hover:text-[#F0F3F6] transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>Previous</span>
@@ -396,7 +397,7 @@ function ProblemsContent() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                 disabled={currentPage >= totalPages}
-                className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 rounded-lg border border-[#273244] bg-[#161D27] px-3 py-1.5 font-medium text-[#929BA8] hover:bg-[#1C2532] hover:text-[#F0F3F6] transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span>Next</span>
                 <ChevronRight className="h-4 w-4" />
@@ -411,7 +412,7 @@ function ProblemsContent() {
 
 export default function ProblemsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0B0F19] text-slate-400 p-8">Loading problem library...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#0D1117] text-[#929BA8] p-8">Loading problem library...</div>}>
       <ProblemsContent />
     </Suspense>
   );

@@ -36,8 +36,11 @@ export async function fetchSubmission(id: string): Promise<Submission> {
   return data;
 }
 
-export async function fetchSubmissionHistory(problemId: string): Promise<Submission[]> {
-  const query = new URLSearchParams({ problem_id: problemId, page_size: '20' });
+export async function fetchSubmissionHistory(problemId?: string, pageSize: number = 100): Promise<Submission[]> {
+  const query = new URLSearchParams({ page_size: pageSize.toString() });
+  if (problemId) {
+    query.set('problem_id', problemId);
+  }
   const res = await fetch(`${API_BASE_URL}/submissions?${query}`, { headers: getHeaders(), credentials: 'include', cache: 'no-store' });
   if (!res.ok) throw new Error('Unable to retrieve submission history.');
   return res.json();
